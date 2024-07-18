@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request
-from werkzeug.urls import url_quote_plus  # Import url_quote_plus instead of url_quote
+from werkzeug.urls import url_quote, url_quote_plus  
 import requests
+import werkzeug
 
 app = Flask(__name__)
 
@@ -12,9 +13,16 @@ def home():
 def weather():
     city = request.form['city']
     api_key = 'your_openweathermap_api_key'  # Replace with your actual OpenWeatherMap API key
-    weather_url = f'http://api.openweathermap.org/data/2.5/weather?q={url_quote_plus(city)}&appid={api_key}'  # Use url_quote_plus here
+
+    # Choose the appropriate function based on your Werkzeug version
+    if werkzeug.__version__ >= '1.0':
+        weather_url = f'http://api.openweathermap.org/data/2.5/weather?q={url_quote_plus(city)}&appid={api_key}'
+    else:
+        weather_url = f'http://api.openweathermap.org/data/2.5/weather?q={url_quote(city)}&appid={api_key}'
+
     response = requests.get(weather_url)
     weather_data = response.json()
+    
     if weather_data['cod'] == 200:
         weather_info = {
             'city': weather_data['name'],
@@ -27,4 +35,4 @@ def weather():
         return render_template('index.html', error="City not found")
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=5000,debug=True)
+    app.run(debug=True)
